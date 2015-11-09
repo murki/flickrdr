@@ -5,8 +5,11 @@ import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 
 import com.murki.flckrdr.model.FlickrPhotos;
 import com.murki.flckrdr.model.FlickrPhoto;
@@ -28,38 +31,10 @@ public class FlickrListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_flickr_list);
 
-        final RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
+        ViewGroup content = (ViewGroup) findViewById(R.id.main_content);
 
-        // use this setting to improve performance if you know that changes
-        // in content do not change the layout size of the RecyclerView
-        mRecyclerView.setHasFixedSize(true);
-
-        // use a linear layout manager
-        RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(this, 2);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-
-        FlickrRepository flickrRepository = new FlickrRepository();
-
-        Call<FlickrPhotos> flickrPhotos = flickrRepository.getRecentPhotos();
-
-        flickrPhotos.enqueue(new Callback<FlickrPhotos>() {
-            @Override
-            public void onResponse(Response<FlickrPhotos> response, Retrofit retrofit) {
-                List<FlickrCardVM> flickrCardVMs = new ArrayList<>(response.body().photos.photo.size());
-                for (FlickrPhoto photo : response.body().photos.photo) {
-                    flickrCardVMs.add(new FlickrCardVM(photo.title, photo.url_n));
-                }
-                // specify an adapter
-                RecyclerView.Adapter mAdapter = new FlickrListAdapter(flickrCardVMs);
-                mRecyclerView.setAdapter(mAdapter);
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                Log.e("ALARMR", "Error", t);
-            }
-        });
-
+        LayoutInflater inflater = getLayoutInflater();
+        inflater.inflate(R.layout.flickr_list_view, content);
     }
 
     @Override
