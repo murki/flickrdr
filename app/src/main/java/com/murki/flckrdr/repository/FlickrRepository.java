@@ -2,7 +2,6 @@ package com.murki.flckrdr.repository;
 
 import com.murki.flckrdr.model.RecentPhotosResponse;
 
-import retrofit.Call;
 import retrofit.MoshiConverterFactory;
 import retrofit.Result;
 import retrofit.Retrofit;
