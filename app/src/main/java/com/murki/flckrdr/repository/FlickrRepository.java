@@ -3,7 +3,6 @@ package com.murki.flckrdr.repository;
 import com.murki.flckrdr.model.RecentPhotosResponse;
 
 import retrofit.MoshiConverterFactory;
-import retrofit.Result;
 import retrofit.Retrofit;
 import retrofit.RxJavaCallAdapterFactory;
 import retrofit.http.GET;
@@ -27,12 +26,12 @@ public class FlickrRepository {
         }
     }
 
-    public Observable<Result<RecentPhotosResponse>> getRecentPhotos() {
+    public Observable<RecentPhotosResponse> getRecentPhotos() {
         return flickrAPI.getRecentPhotos();
     }
 
     private interface IFlickrAPI {
         @GET("?method=flickr.photos.getRecent&format=json&nojsoncallback=1&extras=url_n&api_key=" + API_KEY)
-        Observable<Result<RecentPhotosResponse>> getRecentPhotos();
+        Observable<RecentPhotosResponse> getRecentPhotos();
     }
 }

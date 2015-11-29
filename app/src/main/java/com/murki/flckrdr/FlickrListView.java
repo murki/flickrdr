@@ -87,15 +87,15 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
         subscriptions.unsubscribe();
     }
 
-    private void loadResults(boolean useCacheIfAvaliable) {
+    private void loadResults(boolean useCacheIfAvailable) {
         swipeRefreshLayout.setRefreshing(true);
         // TODO: Move abstraction of caching down to repository/service level
-        Observable<Result<RecentPhotosResponse>> recentPhotosObservable;
-        if (useCacheIfAvaliable && ObservableSingletonManager.INSTANCE.isRecenPhotosResponseObservable()) {
-            Log.i(CLASSNAME, "loadResults(" + useCacheIfAvaliable + ") - fetching cached observable");
+        Observable<RecentPhotosResponse> recentPhotosObservable;
+        if (useCacheIfAvailable && ObservableSingletonManager.INSTANCE.isRecenPhotosResponseObservable()) {
+            Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - fetching cached observable");
             recentPhotosObservable = ObservableSingletonManager.INSTANCE.getRecenPhotosResponseObservable();
         } else {
-            Log.i(CLASSNAME, "loadResults(" + useCacheIfAvaliable + ") - creating and caching observable");
+            Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - creating and caching observable");
             FlickrRepository flickrRepository = new FlickrRepository();
             recentPhotosObservable = flickrRepository.getRecentPhotos()
                     .cache()
@@ -105,14 +105,14 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
             ObservableSingletonManager.INSTANCE.setRecenPhotosResponseObservable(recentPhotosObservable);
         }
 
-        Log.i(CLASSNAME, "loadResults(" + useCacheIfAvaliable + ") - subscribing to observable");
+        Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - subscribing to observable");
         subscriptions.add(recentPhotosObservable.subscribe(flickrRecentPhotosCallback, flickrRecentPhotosErrorCallback));
     }
 
-    private final Action1<Result<RecentPhotosResponse>> flickrRecentPhotosCallback = new Action1<Result<RecentPhotosResponse>>() {
+    private final Action1<RecentPhotosResponse> flickrRecentPhotosCallback = new Action1<RecentPhotosResponse>() {
         @Override
-        public void call(Result<RecentPhotosResponse> recentPhotosResponseResult) {
-            List<FlickrPhoto> photoList = recentPhotosResponseResult.response().body().photos.photo;
+        public void call(RecentPhotosResponse recentPhotosResponseResult) {
+            List<FlickrPhoto> photoList = recentPhotosResponseResult.photos.photo;
             Log.i(CLASSNAME, "flickrRecentPhotosCallback.call() - Response list size=" + photoList.size());
             List<FlickrCardVM> flickrCardVMs = new ArrayList<>(photoList.size());
             for (FlickrPhoto photo : photoList) {

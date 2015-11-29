@@ -2,20 +2,19 @@ package com.murki.flckrdr;
 
 import com.murki.flckrdr.model.RecentPhotosResponse;
 
-import retrofit.Result;
 import rx.Observable;
 
 // TODO: Add cache eviction policy
 public enum ObservableSingletonManager {
     INSTANCE {};
 
-    private Observable<Result<RecentPhotosResponse>> recenPhotosResponseObservable;
+    private Observable<RecentPhotosResponse> recenPhotosResponseObservable;
 
-    public Observable<Result<RecentPhotosResponse>> getRecenPhotosResponseObservable() {
+    public Observable<RecentPhotosResponse> getRecenPhotosResponseObservable() {
         return recenPhotosResponseObservable;
     }
 
-    public void setRecenPhotosResponseObservable(Observable<Result<RecentPhotosResponse>> obs) {
+    public void setRecenPhotosResponseObservable(Observable<RecentPhotosResponse> obs) {
         recenPhotosResponseObservable = obs;
     }
 
