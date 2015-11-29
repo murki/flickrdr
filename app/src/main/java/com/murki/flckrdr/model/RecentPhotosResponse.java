@@ -1,5 +1,5 @@
 package com.murki.flckrdr.model;
 
-public class FlickrPhotos {
+public class RecentPhotosResponse {
     public PhotosSummary photos;
 }

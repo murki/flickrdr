@@ -10,20 +10,25 @@ import android.util.Log;
 import android.widget.RelativeLayout;
 
 import com.murki.flckrdr.model.FlickrPhoto;
-import com.murki.flckrdr.model.FlickrPhotos;
+import com.murki.flckrdr.model.RecentPhotosResponse;
 import com.murki.flckrdr.repository.FlickrRepository;
 import com.murki.flckrdr.viewmodels.FlickrCardVM;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import retrofit.Call;
-import retrofit.Callback;
-import retrofit.Response;
-import retrofit.Retrofit;
+import retrofit.Result;
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+import rx.subscriptions.CompositeSubscription;
 
 public class FlickrListView extends RelativeLayout {
 
+    private static final String CLASSNAME = FlickrListView.class.getCanonicalName();
+    private final CompositeSubscription mSubscriptions = new CompositeSubscription();
+    private Observable<Result<RecentPhotosResponse>> mRecentPhotosObservable;
     private RecyclerView mRecyclerView;
 
     public FlickrListView(Context context) {
@@ -61,30 +66,36 @@ public class FlickrListView extends RelativeLayout {
         super.onAttachedToWindow();
         FlickrRepository flickrRepository = new FlickrRepository();
 
-        Call<FlickrPhotos> flickrPhotos = flickrRepository.getRecentPhotos();
-
-        flickrPhotos.enqueue(new Callback<FlickrPhotos>() {
-            @Override
-            public void onResponse(Response<FlickrPhotos> response, Retrofit retrofit) {
-                List<FlickrCardVM> flickrCardVMs = new ArrayList<>(response.body().photos.photo.size());
-                for (FlickrPhoto photo : response.body().photos.photo) {
-                    flickrCardVMs.add(new FlickrCardVM(photo.title, photo.url_n));
-                }
-                // specify an adapter
-                RecyclerView.Adapter mAdapter = new FlickrListAdapter(flickrCardVMs);
-                mRecyclerView.setAdapter(mAdapter);
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                Log.e("ALARMR", "Error", t);
-            }
-        });
-
+        mRecentPhotosObservable = flickrRepository.getRecentPhotos()
+                .cache()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+        mSubscriptions.add(mRecentPhotosObservable.subscribe(flickrRecentPhotosCallback, flickrRecentPhotosErrorCallback));
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        mSubscriptions.unsubscribe();
     }
+
+    private final Action1<Result<RecentPhotosResponse>> flickrRecentPhotosCallback = new Action1<Result<RecentPhotosResponse>>() {
+        @Override
+        public void call(Result<RecentPhotosResponse> recentPhotosResponseResult) {
+            List<FlickrCardVM> flickrCardVMs = new ArrayList<>(recentPhotosResponseResult.response().body().photos.photo.size());
+            for (FlickrPhoto photo : recentPhotosResponseResult.response().body().photos.photo) {
+                flickrCardVMs.add(new FlickrCardVM(photo.title, photo.url_n));
+            }
+            // specify an adapter
+            RecyclerView.Adapter mAdapter = new FlickrListAdapter(flickrCardVMs);
+            mRecyclerView.setAdapter(mAdapter);
+        }
+    };
+
+    private final Action1<Throwable> flickrRecentPhotosErrorCallback = new Action1<Throwable>() {
+        @Override
+        public void call(Throwable throwable) {
+            Log.e(CLASSNAME, "Error", throwable);
+        }
+    };
 }

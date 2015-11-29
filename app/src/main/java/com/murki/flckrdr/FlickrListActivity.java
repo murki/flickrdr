@@ -2,27 +2,10 @@ package com.murki.flckrdr;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.ViewGroup;
-
-import com.murki.flckrdr.model.FlickrPhotos;
-import com.murki.flckrdr.model.FlickrPhoto;
-import com.murki.flckrdr.repository.FlickrRepository;
-import com.murki.flckrdr.viewmodels.FlickrCardVM;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import retrofit.Call;
-import retrofit.Callback;
-import retrofit.Response;
-import retrofit.Retrofit;
 
 public class FlickrListActivity extends AppCompatActivity {
 
