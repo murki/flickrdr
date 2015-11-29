@@ -7,20 +7,20 @@ import com.murki.flckrdr.BuildConfig;
 import com.squareup.picasso.Picasso;
 
 public class FlickrCardVM {
-    private final String mTitle;
-    private final String mImageUrl;
+    private final String title;
+    private final String imageUrl;
 
     public FlickrCardVM(String title, String imageUrl) {
-        this.mTitle = title;
-        this.mImageUrl = imageUrl;
+        this.title = title;
+        this.imageUrl = imageUrl;
     }
 
     public String getTitle() {
-        return mTitle;
+        return title;
     }
 
     public String getImageUrl() {
-        return mImageUrl;
+        return imageUrl;
     }
 
     @BindingAdapter({"bind:imageUrl"})

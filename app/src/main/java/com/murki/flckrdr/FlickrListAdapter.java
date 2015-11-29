@@ -12,10 +12,10 @@ import com.murki.flckrdr.viewmodels.FlickrCardVM;
 import java.util.List;
 
 public class FlickrListAdapter extends RecyclerView.Adapter<FlickrListAdapter.BindingHolder> {
-    private List<FlickrCardVM> mDataset;
+    private List<FlickrCardVM> dataSet;
 
-    public FlickrListAdapter(List<FlickrCardVM> myDataset) {
-        mDataset = myDataset;
+    public FlickrListAdapter(List<FlickrCardVM> dataSet) {
+        this.dataSet = dataSet;
     }
 
     @Override
@@ -29,17 +29,17 @@ public class FlickrListAdapter extends RecyclerView.Adapter<FlickrListAdapter.Bi
 
     @Override
     public void onBindViewHolder(BindingHolder bindingHolder, int i) {
-        final FlickrCardVM itemVM = mDataset.get(i);
+        final FlickrCardVM itemVM = dataSet.get(i);
         bindingHolder.getBinding().setVariable(com.murki.flckrdr.BR.viewModel, itemVM);
         bindingHolder.getBinding().executePendingBindings();
     }
 
     @Override
     public int getItemCount() {
-        if (mDataset == null) {
+        if (dataSet == null) {
             return 0;
         } else {
-            return mDataset.size();
+            return dataSet.size();
         }
     }
 

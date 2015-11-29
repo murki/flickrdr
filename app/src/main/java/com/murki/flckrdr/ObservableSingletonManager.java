@@ -9,22 +9,22 @@ import rx.Observable;
 public enum ObservableSingletonManager {
     INSTANCE {};
 
-    private Observable<Result<RecentPhotosResponse>> mRecenPhotosResponseObservable;
+    private Observable<Result<RecentPhotosResponse>> recenPhotosResponseObservable;
 
     public Observable<Result<RecentPhotosResponse>> getRecenPhotosResponseObservable() {
-        return mRecenPhotosResponseObservable;
+        return recenPhotosResponseObservable;
     }
 
     public void setRecenPhotosResponseObservable(Observable<Result<RecentPhotosResponse>> obs) {
-        mRecenPhotosResponseObservable = obs;
+        recenPhotosResponseObservable = obs;
     }
 
     public boolean isRecenPhotosResponseObservable() {
-        return mRecenPhotosResponseObservable != null;
+        return recenPhotosResponseObservable != null;
     }
 
     public void removeRecenPhotosResponseObservable() {
-        mRecenPhotosResponseObservable = null;
+        recenPhotosResponseObservable = null;
     }
 
 }

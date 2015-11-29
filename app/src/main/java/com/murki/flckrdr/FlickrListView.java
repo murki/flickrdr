@@ -28,10 +28,9 @@ import rx.subscriptions.CompositeSubscription;
 public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String CLASSNAME = FlickrListView.class.getCanonicalName();
-    private final CompositeSubscription mSubscriptions = new CompositeSubscription();
-    private Observable<Result<RecentPhotosResponse>> mRecentPhotosObservable;
-    private RecyclerView mRecyclerView;
-    private SwipeRefreshLayout mSwipeRefreshView;
+    private final CompositeSubscription subscriptions = new CompositeSubscription();
+    private RecyclerView recyclerView;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     public FlickrListView(Context context) {
         super(context);
@@ -56,16 +55,16 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
 
         Log.i(CLASSNAME, "onFinishInflate() - recyclerView setup");
 
-        mSwipeRefreshView = (SwipeRefreshLayout) findViewById(R.id.flickr_swipe_refresh);
-//        mSwipeRefreshView.setColorSchemeResources(R.color.accent);
-        mSwipeRefreshView.setOnRefreshListener(this);
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.flickr_swipe_refresh);
+//        swipeRefreshLayout.setColorSchemeResources(R.color.accent);
+        swipeRefreshLayout.setOnRefreshListener(this);
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
+        recyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
-        mRecyclerView.setHasFixedSize(true);
+        recyclerView.setHasFixedSize(true);
         // use a linear layout manager
-        mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
     }
 
@@ -85,28 +84,29 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         Log.i(CLASSNAME, "onDetachedFromWindow() - unsubscribing from all subscribed observables");
-        mSubscriptions.unsubscribe();
+        subscriptions.unsubscribe();
     }
 
     private void loadResults(boolean useCacheIfAvaliable) {
-        mSwipeRefreshView.setRefreshing(true);
-        // TODO: Move abstraction of caching down to repository level
+        swipeRefreshLayout.setRefreshing(true);
+        // TODO: Move abstraction of caching down to repository/service level
+        Observable<Result<RecentPhotosResponse>> recentPhotosObservable;
         if (useCacheIfAvaliable && ObservableSingletonManager.INSTANCE.isRecenPhotosResponseObservable()) {
             Log.i(CLASSNAME, "loadResults(" + useCacheIfAvaliable + ") - fetching cached observable");
-            mRecentPhotosObservable = ObservableSingletonManager.INSTANCE.getRecenPhotosResponseObservable();
+            recentPhotosObservable = ObservableSingletonManager.INSTANCE.getRecenPhotosResponseObservable();
         } else {
             Log.i(CLASSNAME, "loadResults(" + useCacheIfAvaliable + ") - creating and caching observable");
             FlickrRepository flickrRepository = new FlickrRepository();
-            mRecentPhotosObservable = flickrRepository.getRecentPhotos()
+            recentPhotosObservable = flickrRepository.getRecentPhotos()
                     .cache()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread());
 
-            ObservableSingletonManager.INSTANCE.setRecenPhotosResponseObservable(mRecentPhotosObservable);
+            ObservableSingletonManager.INSTANCE.setRecenPhotosResponseObservable(recentPhotosObservable);
         }
 
         Log.i(CLASSNAME, "loadResults(" + useCacheIfAvaliable + ") - subscribing to observable");
-        mSubscriptions.add(mRecentPhotosObservable.subscribe(flickrRecentPhotosCallback, flickrRecentPhotosErrorCallback));
+        subscriptions.add(recentPhotosObservable.subscribe(flickrRecentPhotosCallback, flickrRecentPhotosErrorCallback));
     }
 
     private final Action1<Result<RecentPhotosResponse>> flickrRecentPhotosCallback = new Action1<Result<RecentPhotosResponse>>() {
@@ -118,10 +118,10 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
             for (FlickrPhoto photo : photoList) {
                 flickrCardVMs.add(new FlickrCardVM(photo.title, photo.url_n));
             }
-            mSwipeRefreshView.setRefreshing(false);
+            swipeRefreshLayout.setRefreshing(false);
             // specify an adapter
             RecyclerView.Adapter mAdapter = new FlickrListAdapter(flickrCardVMs);
-            mRecyclerView.setAdapter(mAdapter);
+            recyclerView.setAdapter(mAdapter);
         }
     };
 
@@ -129,7 +129,7 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
         @Override
         public void call(Throwable throwable) {
             Log.e(CLASSNAME, "flickrRecentPhotosErrorCallback.call() - ERROR - uncaching observable", throwable);
-            mSwipeRefreshView.setRefreshing(false);
+            swipeRefreshLayout.setRefreshing(false);
             ObservableSingletonManager.INSTANCE.removeRecenPhotosResponseObservable();
         }
     };
