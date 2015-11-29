@@ -1,20 +1,24 @@
 package com.murki.flckrdr;
 
-import com.murki.flckrdr.model.RecentPhotosResponse;
+import com.murki.flckrdr.viewmodels.FlickrCardVM;
+
+import java.util.List;
 
 import rx.Observable;
 
 // TODO: Add cache eviction policy
+// TODO: Make collection + generic
+// TODO: Make thread-safe
 public enum ObservableSingletonManager {
     INSTANCE {};
 
-    private Observable<RecentPhotosResponse> recenPhotosResponseObservable;
+    private Observable<List<FlickrCardVM>> recenPhotosResponseObservable;
 
-    public Observable<RecentPhotosResponse> getRecenPhotosResponseObservable() {
+    public Observable<List<FlickrCardVM>> getRecenPhotosResponseObservable() {
         return recenPhotosResponseObservable;
     }
 
-    public void setRecenPhotosResponseObservable(Observable<RecentPhotosResponse> obs) {
+    public void setRecenPhotosResponseObservable(Observable<List<FlickrCardVM>> obs) {
         recenPhotosResponseObservable = obs;
     }
 

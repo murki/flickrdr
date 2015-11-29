@@ -18,10 +18,10 @@ import com.murki.flckrdr.viewmodels.FlickrCardVM;
 import java.util.ArrayList;
 import java.util.List;
 
-import retrofit.Result;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
@@ -53,10 +53,10 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
     protected void onFinishInflate() {
         super.onFinishInflate();
 
-        Log.i(CLASSNAME, "onFinishInflate() - recyclerView setup");
+        Log.i(CLASSNAME, "onFinishInflate() - setup views");
 
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.flickr_swipe_refresh);
-//        swipeRefreshLayout.setColorSchemeResources(R.color.accent);
+        swipeRefreshLayout.setColorSchemeResources(android.R.color.holo_orange_dark);
         swipeRefreshLayout.setOnRefreshListener(this);
 
         recyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
@@ -90,14 +90,16 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
     private void loadResults(boolean useCacheIfAvailable) {
         swipeRefreshLayout.setRefreshing(true);
         // TODO: Move abstraction of caching down to repository/service level
-        Observable<RecentPhotosResponse> recentPhotosObservable;
+        Observable<List<FlickrCardVM>> recentPhotosObservable;
         if (useCacheIfAvailable && ObservableSingletonManager.INSTANCE.isRecenPhotosResponseObservable()) {
             Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - fetching cached observable");
             recentPhotosObservable = ObservableSingletonManager.INSTANCE.getRecenPhotosResponseObservable();
         } else {
             Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - creating and caching observable");
             FlickrRepository flickrRepository = new FlickrRepository();
-            recentPhotosObservable = flickrRepository.getRecentPhotos()
+            recentPhotosObservable = flickrRepository
+                    .getRecentPhotos()
+                    .map(flickrApiToVmMapping)
                     .cache()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread());
@@ -106,18 +108,26 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
         }
 
         Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - subscribing to observable");
-        subscriptions.add(recentPhotosObservable.subscribe(flickrRecentPhotosCallback, flickrRecentPhotosErrorCallback));
+        subscriptions.add(recentPhotosObservable.subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosErrorOnError));
     }
 
-    private final Action1<RecentPhotosResponse> flickrRecentPhotosCallback = new Action1<RecentPhotosResponse>() {
+    private final Func1<RecentPhotosResponse, List<FlickrCardVM>> flickrApiToVmMapping = new Func1<RecentPhotosResponse, List<FlickrCardVM>>() {
         @Override
-        public void call(RecentPhotosResponse recentPhotosResponseResult) {
-            List<FlickrPhoto> photoList = recentPhotosResponseResult.photos.photo;
-            Log.i(CLASSNAME, "flickrRecentPhotosCallback.call() - Response list size=" + photoList.size());
+        public List<FlickrCardVM> call(RecentPhotosResponse recentPhotosResponse) {
+            List<FlickrPhoto> photoList = recentPhotosResponse.photos.photo;
+            Log.i(CLASSNAME, "flickrApiToVmMapping.call() - Response list size=" + photoList.size());
             List<FlickrCardVM> flickrCardVMs = new ArrayList<>(photoList.size());
             for (FlickrPhoto photo : photoList) {
                 flickrCardVMs.add(new FlickrCardVM(photo.title, photo.url_n));
             }
+            return flickrCardVMs;
+        }
+    };
+
+    private final Action1<List<FlickrCardVM>> flickrRecentPhotosOnNext = new Action1<List<FlickrCardVM>>() {
+        @Override
+        public void call(List<FlickrCardVM> flickrCardVMs) {
+            Log.i(CLASSNAME, "flickrRecentPhotosOnNext.call() - Displaying card VMs in Adapter");
             swipeRefreshLayout.setRefreshing(false);
             // specify an adapter
             RecyclerView.Adapter mAdapter = new FlickrListAdapter(flickrCardVMs);
@@ -125,10 +135,10 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
         }
     };
 
-    private final Action1<Throwable> flickrRecentPhotosErrorCallback = new Action1<Throwable>() {
+    private final Action1<Throwable> flickrRecentPhotosErrorOnError = new Action1<Throwable>() {
         @Override
         public void call(Throwable throwable) {
-            Log.e(CLASSNAME, "flickrRecentPhotosErrorCallback.call() - ERROR - uncaching observable", throwable);
+            Log.e(CLASSNAME, "flickrRecentPhotosErrorOnError.call() - ERROR - uncaching observable", throwable);
             swipeRefreshLayout.setRefreshing(false);
             ObservableSingletonManager.INSTANCE.removeRecenPhotosResponseObservable();
         }
