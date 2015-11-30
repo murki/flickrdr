@@ -108,7 +108,7 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
         }
 
         Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - subscribing to observable");
-        subscriptions.add(recentPhotosObservable.subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosErrorOnError));
+        subscriptions.add(recentPhotosObservable.subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosOnError));
     }
 
     private final Func1<RecentPhotosResponse, List<FlickrCardVM>> flickrApiToVmMapping = new Func1<RecentPhotosResponse, List<FlickrCardVM>>() {
@@ -135,10 +135,10 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
         }
     };
 
-    private final Action1<Throwable> flickrRecentPhotosErrorOnError = new Action1<Throwable>() {
+    private final Action1<Throwable> flickrRecentPhotosOnError = new Action1<Throwable>() {
         @Override
         public void call(Throwable throwable) {
-            Log.e(CLASSNAME, "flickrRecentPhotosErrorOnError.call() - ERROR - uncaching observable", throwable);
+            Log.e(CLASSNAME, "flickrRecentPhotosOnError.call() - ERROR - uncaching observable", throwable);
             swipeRefreshLayout.setRefreshing(false);
             ObservableSingletonManager.INSTANCE.removeRecenPhotosResponseObservable();
         }
