@@ -2,6 +2,8 @@ package com.murki.flckrdr;
 
 import android.util.SparseArray;
 
+import com.murki.flckrdr.service.ReusableObservableService;
+
 import rx.Observable;
 
 // TODO: Add cache eviction policy
@@ -13,20 +15,17 @@ public enum ObservableSingletonManager {
     private SparseArray<Observable> inMemoryCache = new SparseArray<>();
 
     @SuppressWarnings("unchecked")
-    public <T extends Observable> T getRecenPhotosResponseObservable() {
-        return (T) inMemoryCache.get(0);
+    public <T extends Observable> T getObservable(@ReusableObservableService.ServiceMethod int key) {
+        return (T) inMemoryCache.get(key);
     }
 
-    public void setRecenPhotosResponseObservable(Observable obs) {
-        inMemoryCache.put(0, obs);
+    public void putObservable(@ReusableObservableService.ServiceMethod int key,
+                              Observable obs) {
+        inMemoryCache.put(key, obs);
     }
 
-    public boolean isRecenPhotosResponseObservable() {
-        return inMemoryCache.get(0) != null;
-    }
-
-    public void removeRecenPhotosResponseObservable() {
-        inMemoryCache.delete(0);
+    public void removeObservable(@ReusableObservableService.ServiceMethod int key) {
+        inMemoryCache.delete(key);
     }
 
 }

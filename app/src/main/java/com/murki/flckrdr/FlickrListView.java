@@ -14,6 +14,7 @@ import com.murki.flckrdr.model.FlickrPhoto;
 import com.murki.flckrdr.model.RecentPhotosResponse;
 import com.murki.flckrdr.repository.FlickrRepository;
 import com.murki.flckrdr.service.FlickrGetRecentPhotosService;
+import com.murki.flckrdr.service.ReusableObservableService;
 import com.murki.flckrdr.viewmodel.FlickrCardVM;
 
 import java.util.ArrayList;
@@ -109,12 +110,13 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
         }
     };
 
+    // TODO: move this onError logic to Service
     private final Action1<Throwable> flickrRecentPhotosOnError = new Action1<Throwable>() {
         @Override
         public void call(Throwable throwable) {
             Log.e(CLASSNAME, "flickrRecentPhotosOnError.call() - ERROR - uncaching observable", throwable);
             swipeRefreshLayout.setRefreshing(false);
-            ObservableSingletonManager.INSTANCE.removeRecenPhotosResponseObservable();
+            ObservableSingletonManager.INSTANCE.removeObservable(ReusableObservableService.FLICKR_GET_RECENT_PHOTOS);
         }
     };
 
