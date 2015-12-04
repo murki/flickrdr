@@ -7,7 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.murki.flckrdr.viewmodels.FlickrCardVM;
+import com.murki.flckrdr.viewmodel.FlickrCardVM;
 
 import java.util.List;
 

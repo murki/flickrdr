@@ -13,7 +13,7 @@ import android.widget.RelativeLayout;
 import com.murki.flckrdr.model.FlickrPhoto;
 import com.murki.flckrdr.model.RecentPhotosResponse;
 import com.murki.flckrdr.repository.FlickrRepository;
-import com.murki.flckrdr.viewmodels.FlickrCardVM;
+import com.murki.flckrdr.viewmodel.FlickrCardVM;
 
 import java.util.ArrayList;
 import java.util.List;

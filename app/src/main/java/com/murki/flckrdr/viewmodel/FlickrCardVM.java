@@ -1,4 +1,4 @@
-package com.murki.flckrdr.viewmodels;
+package com.murki.flckrdr.viewmodel;
 
 import android.databinding.BindingAdapter;
 import android.widget.ImageView;

@@ -1,6 +1,6 @@
 package com.murki.flckrdr;
 
-import com.murki.flckrdr.viewmodels.FlickrCardVM;
+import com.murki.flckrdr.viewmodel.FlickrCardVM;
 
 import java.util.List;
 
