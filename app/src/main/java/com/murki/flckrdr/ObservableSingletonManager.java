@@ -1,8 +1,6 @@
 package com.murki.flckrdr;
 
-import com.murki.flckrdr.viewmodel.FlickrCardVM;
-
-import java.util.List;
+import android.util.SparseArray;
 
 import rx.Observable;
 
@@ -12,22 +10,23 @@ import rx.Observable;
 public enum ObservableSingletonManager {
     INSTANCE {};
 
-    private Observable<List<FlickrCardVM>> recenPhotosResponseObservable;
+    private SparseArray<Observable> inMemoryCache = new SparseArray<>();
 
-    public Observable<List<FlickrCardVM>> getRecenPhotosResponseObservable() {
-        return recenPhotosResponseObservable;
+    @SuppressWarnings("unchecked")
+    public <T extends Observable> T getRecenPhotosResponseObservable() {
+        return (T) inMemoryCache.get(0);
     }
 
-    public void setRecenPhotosResponseObservable(Observable<List<FlickrCardVM>> obs) {
-        recenPhotosResponseObservable = obs;
+    public void setRecenPhotosResponseObservable(Observable obs) {
+        inMemoryCache.put(0, obs);
     }
 
     public boolean isRecenPhotosResponseObservable() {
-        return recenPhotosResponseObservable != null;
+        return inMemoryCache.get(0) != null;
     }
 
     public void removeRecenPhotosResponseObservable() {
-        recenPhotosResponseObservable = null;
+        inMemoryCache.delete(0);
     }
 
 }
