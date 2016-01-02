@@ -40,10 +40,11 @@
                     android:layout_alignTop="@id/flickrPhoto"
                     android:layout_alignRight="@id/flickrPhoto"
                     android:layout_alignBottom="@id/flickrPhoto"
-                    android:layout_margin="3dp"
+                    android:padding="3dp"
                     android:gravity="bottom"
                     android:singleLine="true"
                     android:textColor="@android:color/white"
+                    android:background="@drawable/gradient_shape"
                     android:text="@{viewModel.Title}"/>
             </RelativeLayout>
         </android.support.v7.widget.CardView>
