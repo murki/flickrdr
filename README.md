@@ -1,1 +1,1 @@
-# Alarmr
+# flickrdr - Flickr Readr
