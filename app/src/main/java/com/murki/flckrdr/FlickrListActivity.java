@@ -13,11 +13,6 @@ public class FlickrListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_flickr_list);
-
-        ViewGroup content = (ViewGroup) findViewById(R.id.main_content);
-
-        LayoutInflater inflater = getLayoutInflater();
-        inflater.inflate(R.layout.flickr_list_view, content);
     }
 
     @Override
