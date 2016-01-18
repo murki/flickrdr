@@ -13,7 +13,6 @@ import android.widget.RelativeLayout;
 import com.murki.flckrdr.model.FlickrPhoto;
 import com.murki.flckrdr.model.RecentPhotosResponse;
 import com.murki.flckrdr.repository.FlickrRepository;
-import com.murki.flckrdr.service.FlickrGetRecentPhotosService;
 import com.murki.flckrdr.viewmodel.FlickrCardVM;
 
 import java.util.ArrayList;
@@ -73,12 +72,12 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         // TODO: Distinguish between rotation and navigation
-        loadResults();
+        loadResults(true);
     }
 
     @Override
     public void onRefresh() {
-        loadResults();
+        loadResults(false);
     }
 
     @Override
@@ -88,15 +87,42 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
         subscriptions.unsubscribe();
     }
 
-    private void loadResults() {
+    private void loadResults(boolean useCacheIfAvailable) {
         swipeRefreshLayout.setRefreshing(true);
+        // TODO: Move abstraction of caching down to repository/service level
+        Observable<List<FlickrCardVM>> recentPhotosObservable;
+        if (useCacheIfAvailable && ObservableSingletonManager.INSTANCE.isRecenPhotosResponseObservable()) {
+            Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - fetching cached observable");
+            recentPhotosObservable = ObservableSingletonManager.INSTANCE.getRecenPhotosResponseObservable();
+        } else {
+            Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - creating and caching observable");
+            FlickrRepository flickrRepository = new FlickrRepository();
+            recentPhotosObservable = flickrRepository
+                    .getRecentPhotos()
+                    .map(flickrApiToVmMapping)
+                    .cache()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread());
 
-        FlickrGetRecentPhotosService service = new FlickrGetRecentPhotosService();
-        Observable<List<FlickrCardVM>> recentPhotosObservable = service.call().map(FlickrCardVM.flickrApiToVmMapping);
+            ObservableSingletonManager.INSTANCE.setRecenPhotosResponseObservable(recentPhotosObservable);
+        }
+
+        Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - subscribing to observable");
         subscriptions.add(recentPhotosObservable.subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosOnError));
-
-        Log.i(CLASSNAME, "loadResults() - fetched observable + subscribed to it");
     }
+
+    private final Func1<RecentPhotosResponse, List<FlickrCardVM>> flickrApiToVmMapping = new Func1<RecentPhotosResponse, List<FlickrCardVM>>() {
+        @Override
+        public List<FlickrCardVM> call(RecentPhotosResponse recentPhotosResponse) {
+            List<FlickrPhoto> photoList = recentPhotosResponse.photos.photo;
+            Log.i(CLASSNAME, "flickrApiToVmMapping.call() - Response list size=" + photoList.size());
+            List<FlickrCardVM> flickrCardVMs = new ArrayList<>(photoList.size());
+            for (FlickrPhoto photo : photoList) {
+                flickrCardVMs.add(new FlickrCardVM(photo.title, photo.url_n));
+            }
+            return flickrCardVMs;
+        }
+    };
 
     private final Action1<List<FlickrCardVM>> flickrRecentPhotosOnNext = new Action1<List<FlickrCardVM>>() {
         @Override
