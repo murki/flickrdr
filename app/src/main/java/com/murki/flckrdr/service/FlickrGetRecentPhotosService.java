@@ -31,22 +31,24 @@ public class FlickrGetRecentPhotosService extends ReusableObservableService {
     }
 
     @Override
-    public @ServiceMethod int getMethodKey() {
+    public int getMethodKey() {
         return FLICKR_GET_RECENT_PHOTOS;
     }
 
     @Override
     public Observable<RecentPhotosResponse> call() {
-        Observable<RecentPhotosResponse> recentPhotosObservable = ObservableSingletonManager.INSTANCE.getObservable(getMethodKey());
+        Observable<RecentPhotosResponse> recentPhotosObservable;
 
-        if (recentPhotosObservable == null) {
+        if (ObservableSingletonManager.INSTANCE.isRecenPhotosResponseObservable()) {
+            recentPhotosObservable = ObservableSingletonManager.INSTANCE.getRecenPhotosResponseObservable();
+        } else {
             recentPhotosObservable = flickrRepository
                     .getRecentPhotos()
                     .cache()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread());
 
-            ObservableSingletonManager.INSTANCE.putObservable(getMethodKey(), recentPhotosObservable);
+            ObservableSingletonManager.INSTANCE.setRecenPhotosResponseObservable(recentPhotosObservable);
         }
 
         return recentPhotosObservable;
