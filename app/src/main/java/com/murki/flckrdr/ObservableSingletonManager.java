@@ -1,8 +1,10 @@
 package com.murki.flckrdr;
 
-import com.murki.flckrdr.viewmodel.FlickrCardVM;
+import android.support.annotation.IntDef;
+import android.util.SparseArray;
 
-import java.util.List;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 import rx.Observable;
 
@@ -12,22 +14,25 @@ import rx.Observable;
 public enum ObservableSingletonManager {
     INSTANCE {};
 
-    private Observable<List<FlickrCardVM>> recenPhotosResponseObservable;
+    @IntDef({FLICKR_GET_RECENT_PHOTOS})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ServiceMethod {}
 
-    public Observable<List<FlickrCardVM>> getRecenPhotosResponseObservable() {
-        return recenPhotosResponseObservable;
+    public static final int FLICKR_GET_RECENT_PHOTOS = 0;
+
+    private SparseArray<Observable> inMemoryCache = new SparseArray<>();
+
+    @SuppressWarnings("unchecked")
+    public <T extends Observable> T getObservable(@ServiceMethod int key) {
+        return (T) inMemoryCache.get(key);
     }
 
-    public void setRecenPhotosResponseObservable(Observable<List<FlickrCardVM>> obs) {
-        recenPhotosResponseObservable = obs;
+    public void putObservable(@ServiceMethod int key, Observable obs) {
+        inMemoryCache.put(key, obs);
     }
 
-    public boolean isRecenPhotosResponseObservable() {
-        return recenPhotosResponseObservable != null;
-    }
-
-    public void removeRecenPhotosResponseObservable() {
-        recenPhotosResponseObservable = null;
+    public void removeObservable(@ServiceMethod int key) {
+        inMemoryCache.delete(key);
     }
 
 }

@@ -91,10 +91,8 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
         swipeRefreshLayout.setRefreshing(true);
         // TODO: Move abstraction of caching down to repository/service level
         Observable<List<FlickrCardVM>> recentPhotosObservable;
-        if (useCacheIfAvailable && ObservableSingletonManager.INSTANCE.isRecenPhotosResponseObservable()) {
-            Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - fetching cached observable");
-            recentPhotosObservable = ObservableSingletonManager.INSTANCE.getRecenPhotosResponseObservable();
-        } else {
+        recentPhotosObservable = ObservableSingletonManager.INSTANCE.getObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
+        if (!useCacheIfAvailable || recentPhotosObservable == null) {
             Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - creating and caching observable");
             FlickrRepository flickrRepository = new FlickrRepository();
             recentPhotosObservable = flickrRepository
@@ -104,7 +102,7 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread());
 
-            ObservableSingletonManager.INSTANCE.setRecenPhotosResponseObservable(recentPhotosObservable);
+            ObservableSingletonManager.INSTANCE.putObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS, recentPhotosObservable);
         }
 
         Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - subscribing to observable");
@@ -140,7 +138,7 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
         public void call(Throwable throwable) {
             Log.e(CLASSNAME, "flickrRecentPhotosOnError.call() - ERROR - uncaching observable", throwable);
             swipeRefreshLayout.setRefreshing(false);
-            ObservableSingletonManager.INSTANCE.removeRecenPhotosResponseObservable();
+            ObservableSingletonManager.INSTANCE.removeObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
         }
     };
 

@@ -19,6 +19,7 @@ import com.murki.flckrdr.viewmodel.FlickrCardVM;
 import java.util.ArrayList;
 import java.util.List;
 
+import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -60,14 +61,16 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
     public void onDestroy() {
         super.onDestroy();
         Log.d(CLASSNAME, "onDestroy()");
-
         unsubscribe();
+        if (getActivity().isFinishing()) {
+            ObservableSingletonManager.INSTANCE.removeObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
+        }
     }
 
     @Override
     public void onRefresh() {
         Log.d(CLASSNAME, "onRefresh()");
-
+        ObservableSingletonManager.INSTANCE.removeObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
         fetchFlickrItems();
     }
 
@@ -90,12 +93,18 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
         swipeRefreshLayout.setRefreshing(true);
         unsubscribe();
         FlickrRepository flickrRepository = new FlickrRepository(); // TODO: Make Singleton
-        flickrListSubscription = flickrRepository
-                .getRecentPhotos()
-                .map(FlickrApiToVmMapping.instance())
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosOnError);
+        Observable<List<FlickrCardVM>> recentPhotosObservable = ObservableSingletonManager.INSTANCE.getObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
+        if (recentPhotosObservable == null) {
+            recentPhotosObservable = flickrRepository
+                    .getRecentPhotos()
+                    .map(FlickrApiToVmMapping.instance())
+                    .cache()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread());
+
+            ObservableSingletonManager.INSTANCE.putObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS, recentPhotosObservable);
+        }
+        flickrListSubscription = recentPhotosObservable.subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosOnError);
     }
 
     private final Action1<List<FlickrCardVM>> flickrRecentPhotosOnNext = new Action1<List<FlickrCardVM>>() {
@@ -114,8 +123,8 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
             Log.e(CLASSNAME, "flickrRecentPhotosOnError.call() - ERROR", throwable);
             swipeRefreshLayout.setRefreshing(false);
             flickrListAdapter.clear();
+            ObservableSingletonManager.INSTANCE.removeObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
             Toast.makeText(getActivity(), throwable.getMessage(), Toast.LENGTH_LONG).show();
-            unsubscribe(); // TODO: Should this be called here??
         }
     };
 
