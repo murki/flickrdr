@@ -26,9 +26,9 @@ public class FlickrCardVM {
     @BindingAdapter({"bind:imageUrl"})
     public static void loadImage(ImageView view, String url) {
         Picasso pic = Picasso.with(view.getContext());
-        if (BuildConfig.DEBUG) {
-            pic.setLoggingEnabled(true);
-        }
+//        if (BuildConfig.DEBUG) {
+//            pic.setLoggingEnabled(true);
+//        }
         pic.load(url).into(view);
     }
 }

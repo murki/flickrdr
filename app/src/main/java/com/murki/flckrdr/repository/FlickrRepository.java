@@ -2,6 +2,7 @@ package com.murki.flckrdr.repository;
 
 import android.util.Log;
 
+import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.murki.flckrdr.model.RecentPhotosResponse;
 
 import retrofit.MoshiConverterFactory;
@@ -29,8 +30,8 @@ public class FlickrRepository {
         }
     }
 
+    @RxLogObservable
     public Observable<RecentPhotosResponse> getRecentPhotos() {
-        Log.d(CLASSNAME, "getRecentPhotos() network call being made.");
         return flickrAPI.getRecentPhotos();
     }
 

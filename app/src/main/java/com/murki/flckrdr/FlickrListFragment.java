@@ -89,7 +89,7 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
     private void fetchFlickrItems() {
         swipeRefreshLayout.setRefreshing(true);
         unsubscribe();
-        FlickrRepository flickrRepository = new FlickrRepository();
+        FlickrRepository flickrRepository = new FlickrRepository(); // TODO: Make Singleton
         flickrListSubscription = flickrRepository
                 .getRecentPhotos()
                 .map(FlickrApiToVmMapping.instance())

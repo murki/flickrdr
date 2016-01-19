@@ -1,4 +1,14 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.fernandocejas.frodo:frodo-plugin:0.8.2"
+    }
+}
+
 apply plugin: 'com.android.application'
+apply plugin: 'com.fernandocejas.frodo'
 
 android {
     compileSdkVersion 23

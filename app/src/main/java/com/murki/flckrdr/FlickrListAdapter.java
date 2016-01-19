@@ -3,6 +3,7 @@ package com.murki.flckrdr;
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FlickrListAdapter extends RecyclerView.Adapter<FlickrListAdapter.BindingHolder> {
+
+    private static final String CLASSNAME = FlickrListAdapter.class.getCanonicalName();
+
     private ArrayList<FlickrCardVM> dataSet;
 
     public FlickrListAdapter(ArrayList<FlickrCardVM> dataSet) {
@@ -50,6 +54,7 @@ public class FlickrListAdapter extends RecyclerView.Adapter<FlickrListAdapter.Bi
         if (dataSetSize > 0) {
             dataSet.clear();
             notifyItemRangeRemoved(0, dataSetSize);
+            Log.d(CLASSNAME, "notifyItemRangeRemoved() - dataSetSize=" + dataSetSize);
         }
     }
 
@@ -59,6 +64,7 @@ public class FlickrListAdapter extends RecyclerView.Adapter<FlickrListAdapter.Bi
         if (dataSetSize > 0) {
             this.dataSet.addAll(dataSet);
             notifyItemRangeInserted(0, dataSetSize);
+            Log.d(CLASSNAME, "notifyItemRangeInserted() - dataSetSize=" + dataSetSize);
         }
     }
 
