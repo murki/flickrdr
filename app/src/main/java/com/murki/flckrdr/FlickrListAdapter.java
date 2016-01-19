@@ -9,12 +9,14 @@ import android.view.ViewGroup;
 
 import com.murki.flckrdr.viewmodel.FlickrCardVM;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 
 public class FlickrListAdapter extends RecyclerView.Adapter<FlickrListAdapter.BindingHolder> {
-    private List<FlickrCardVM> dataSet;
+    private ArrayList<FlickrCardVM> dataSet;
 
-    public FlickrListAdapter(List<FlickrCardVM> dataSet) {
+    public FlickrListAdapter(ArrayList<FlickrCardVM> dataSet) {
         this.dataSet = dataSet;
     }
 
@@ -40,6 +42,23 @@ public class FlickrListAdapter extends RecyclerView.Adapter<FlickrListAdapter.Bi
             return 0;
         } else {
             return dataSet.size();
+        }
+    }
+
+    public void clear() {
+        int dataSetSize = dataSet.size();
+        if (dataSetSize > 0) {
+            dataSet.clear();
+            notifyItemRangeRemoved(0, dataSetSize);
+        }
+    }
+
+    public void refreshDataSet(List<FlickrCardVM> dataSet) {
+        clear();
+        int dataSetSize = dataSet.size();
+        if (dataSetSize > 0) {
+            this.dataSet.addAll(dataSet);
+            notifyItemRangeInserted(0, dataSetSize);
         }
     }
 

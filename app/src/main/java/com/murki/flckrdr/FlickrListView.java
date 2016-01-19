@@ -130,8 +130,8 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
             Log.i(CLASSNAME, "flickrRecentPhotosOnNext.call() - Displaying card VMs in Adapter");
             swipeRefreshLayout.setRefreshing(false);
             // specify an adapter
-            RecyclerView.Adapter mAdapter = new FlickrListAdapter(flickrCardVMs);
-            recyclerView.setAdapter(mAdapter);
+//            RecyclerView.Adapter mAdapter = new FlickrListAdapter(flickrCardVMs);
+//            recyclerView.setAdapter(mAdapter);
         }
     };
 
