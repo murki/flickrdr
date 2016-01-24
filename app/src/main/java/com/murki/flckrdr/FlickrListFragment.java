@@ -12,7 +12,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.murki.flckrdr.repository.FlickrRepository;
+import com.murki.flckrdr.model.RecentPhotosResponse;
+import com.murki.flckrdr.repository.FlickrApiRepository;
+import com.murki.flckrdr.repository.FlickrDiskRepository;
+import com.murki.flckrdr.repository.FlickrDomainService;
 import com.murki.flckrdr.viewmodel.FlickrApiToVmMapping;
 import com.murki.flckrdr.viewmodel.FlickrCardVM;
 
@@ -23,6 +26,7 @@ import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
@@ -92,12 +96,11 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
     private void fetchFlickrItems() {
         swipeRefreshLayout.setRefreshing(true);
         unsubscribe();
-        FlickrRepository flickrRepository = new FlickrRepository(); // TODO: Make Singleton
+        FlickrDomainService flickrDomainService = new FlickrDomainService(getContext());
         Observable<List<FlickrCardVM>> recentPhotosObservable = ObservableSingletonManager.INSTANCE.getObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
         if (recentPhotosObservable == null) {
-            recentPhotosObservable = flickrRepository
+            recentPhotosObservable = flickrDomainService
                     .getRecentPhotos()
-                    .map(FlickrApiToVmMapping.instance())
                     .cache()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread());

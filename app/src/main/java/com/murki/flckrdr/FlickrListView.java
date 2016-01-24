@@ -12,7 +12,7 @@ import android.widget.RelativeLayout;
 
 import com.murki.flckrdr.model.FlickrPhoto;
 import com.murki.flckrdr.model.RecentPhotosResponse;
-import com.murki.flckrdr.repository.FlickrRepository;
+import com.murki.flckrdr.repository.FlickrApiRepository;
 import com.murki.flckrdr.viewmodel.FlickrCardVM;
 
 import java.util.ArrayList;
@@ -94,8 +94,8 @@ public class FlickrListView extends RelativeLayout implements SwipeRefreshLayout
         recentPhotosObservable = ObservableSingletonManager.INSTANCE.getObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
         if (!useCacheIfAvailable || recentPhotosObservable == null) {
             Log.i(CLASSNAME, "loadResults(" + useCacheIfAvailable + ") - creating and caching observable");
-            FlickrRepository flickrRepository = new FlickrRepository();
-            recentPhotosObservable = flickrRepository
+            FlickrApiRepository flickrApiRepository = new FlickrApiRepository();
+            recentPhotosObservable = flickrApiRepository
                     .getRecentPhotos()
                     .map(flickrApiToVmMapping)
                     .cache()
