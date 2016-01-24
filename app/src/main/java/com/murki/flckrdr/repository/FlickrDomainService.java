@@ -11,6 +11,7 @@ import com.murki.flckrdr.viewmodel.FlickrCardVM;
 import java.util.List;
 
 import rx.Observable;
+import rx.functions.Action1;
 import rx.functions.Func1;
 
 public class FlickrDomainService {
@@ -25,13 +26,21 @@ public class FlickrDomainService {
 
     @RxLogObservable
     public Observable<List<FlickrCardVM>> getRecentPhotos() {
-        return Observable.concat(
-                flickrApiRepository.getRecentPhotos(),
-                flickrDiskRepository.getRecentPhotos())
-                .first(new Func1<RecentPhotosResponse, Boolean>() {
+        return Observable.merge(
+                flickrDiskRepository.getRecentPhotos(),
+                flickrApiRepository.getRecentPhotos().doOnNext(new Action1<RecentPhotosResponse>() {
+                    @Override
+                    public void call(RecentPhotosResponse recentPhotosResponse) {
+                        flickrDiskRepository.savePhotosNonRx(recentPhotosResponse); // TODO: Make it work with chained Observables
+                    }
+                }))
+                .filter(new Func1<RecentPhotosResponse, Boolean>() {
                     @Override
                     public Boolean call(RecentPhotosResponse recentPhotosResponse) {
-                        Log.d(FlickrDomainService.class.getCanonicalName(), "Frodo (fake) => First call finished! recentPhotosResponse=" + recentPhotosResponse);
+                        Log.d(FlickrDomainService.class.getCanonicalName(), "Frodo (fake) => Call finished! Filtering results. recentPhotosResponse=" + recentPhotosResponse);
+                        // TODO: implemente right filter:
+                        // filter it, if timestamp of new arrived (emission) data is less than timestamp of already displayed data — ignore it.
+                        // filter(data -> data.timeStamp >= displayedData.timeStamp)
                         return recentPhotosResponse != null && recentPhotosResponse.isUpToDate();
                     }
                 })

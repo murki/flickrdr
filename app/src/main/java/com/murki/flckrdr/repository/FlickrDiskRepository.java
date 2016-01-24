@@ -17,12 +17,10 @@ import rx.Subscriber;
 
 public class FlickrDiskRepository {
 
-//    private final SharedPreferences sharedPrefs;
     private final RxSharedPreferences rxPreferences;
     private final JsonAdapter<RecentPhotosResponse> flickrPhotosJsonAdapter;
 
     public FlickrDiskRepository(Context context) {
-//        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
         rxPreferences = RxSharedPreferences.create(PreferenceManager.getDefaultSharedPreferences(context));
         Moshi moshi = new Moshi.Builder().build();
         flickrPhotosJsonAdapter = moshi.adapter(RecentPhotosResponse.class);
@@ -37,13 +35,6 @@ public class FlickrDiskRepository {
                     rxPreferences.getObject("key", flickrPhotosAdapter).set(photos);
                     subscriber.onNext(null);
                     subscriber.onCompleted();
-//                    boolean isSuccess = sharedPrefs.edit().putString("key", "serializedValue").commit();
-//                    if (isSuccess) {
-//                        subscriber.onNext(null);
-//                        subscriber.onCompleted();
-//                    } else {
-//                        subscriber.onError(new Exception("Failed to store List<FlickrPhoto> in SharedPreferences."));
-//                    }
                 } catch (Exception ex) {
                     subscriber.onError(ex);
                 }
@@ -51,10 +42,24 @@ public class FlickrDiskRepository {
         });
     }
 
+    public void savePhotosNonRx(RecentPhotosResponse photos) {
+        rxPreferences.getObject("key", flickrPhotosAdapter).set(photos);
+    }
+
     @RxLogObservable
     public Observable<RecentPhotosResponse> getRecentPhotos() {
-        return rxPreferences.getObject("key", flickrPhotosAdapter).asObservable();
-//        return rxPreferences.getString("key").asObservable();
+        return Observable.create(new Observable.OnSubscribe<RecentPhotosResponse>() {
+            @Override
+            public void call(Subscriber<? super RecentPhotosResponse> subscriber) {
+                try {
+                    RecentPhotosResponse photos = rxPreferences.getObject("key", flickrPhotosAdapter).get();
+                    subscriber.onNext(photos);
+                    subscriber.onCompleted();
+                } catch (Exception ex) {
+                    subscriber.onError(ex);
+                }
+            }
+        });
     }
 
     private final Preference.Adapter<RecentPhotosResponse> flickrPhotosAdapter = new Preference.Adapter<RecentPhotosResponse>() {
@@ -65,7 +70,7 @@ public class FlickrDiskRepository {
                 String serializedPhotoList = sharedPreferences.getString(key, "");
                 photos = flickrPhotosJsonAdapter.fromJson(serializedPhotoList);
             } catch (Exception e) {
-                e.printStackTrace(); // TODO: Do better error handling
+                e.printStackTrace(); // TODO: Pass error to observable chain
             }
             return photos;
         }
