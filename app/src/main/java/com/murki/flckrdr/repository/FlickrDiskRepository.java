@@ -17,6 +17,8 @@ import rx.Subscriber;
 
 public class FlickrDiskRepository {
 
+    private final static String RECENT_PHOTOS_RESPONSE_KEY = "com.murki.flckrdr.model.RecentPhotosResponse_key";
+
     private final RxSharedPreferences rxPreferences;
     private final JsonAdapter<RecentPhotosResponse> flickrPhotosJsonAdapter;
 
@@ -32,7 +34,7 @@ public class FlickrDiskRepository {
             @Override
             public void call(Subscriber<? super Void> subscriber) {
                 try {
-                    rxPreferences.getObject("key", flickrPhotosAdapter).set(photos);
+                    rxPreferences.getObject(RECENT_PHOTOS_RESPONSE_KEY, flickrPhotosAdapter).set(photos);
                     subscriber.onNext(null);
                     subscriber.onCompleted();
                 } catch (Exception ex) {
@@ -43,7 +45,7 @@ public class FlickrDiskRepository {
     }
 
     public void savePhotosNonRx(RecentPhotosResponse photos) {
-        rxPreferences.getObject("key", flickrPhotosAdapter).set(photos);
+        rxPreferences.getObject(RECENT_PHOTOS_RESPONSE_KEY, flickrPhotosAdapter).set(photos);
     }
 
     @RxLogObservable
@@ -52,7 +54,7 @@ public class FlickrDiskRepository {
             @Override
             public void call(Subscriber<? super RecentPhotosResponse> subscriber) {
                 try {
-                    RecentPhotosResponse photos = rxPreferences.getObject("key", flickrPhotosAdapter).get();
+                    RecentPhotosResponse photos = rxPreferences.getObject(RECENT_PHOTOS_RESPONSE_KEY, flickrPhotosAdapter).get();
                     subscriber.onNext(photos);
                     subscriber.onCompleted();
                 } catch (Exception ex) {

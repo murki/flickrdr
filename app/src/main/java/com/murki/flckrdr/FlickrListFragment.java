@@ -25,6 +25,7 @@ import java.util.List;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -107,14 +108,13 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
 
             ObservableSingletonManager.INSTANCE.putObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS, recentPhotosObservable);
         }
-        flickrListSubscription = recentPhotosObservable.subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosOnError);
+        flickrListSubscription = recentPhotosObservable.subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosOnError, flickrRecenPhotosOnComplete);
     }
 
     private final Action1<List<FlickrCardVM>> flickrRecentPhotosOnNext = new Action1<List<FlickrCardVM>>() {
         @Override
         public void call(List<FlickrCardVM> flickrCardVMs) {
             Log.d(CLASSNAME, "flickrRecentPhotosOnNext.call() - Displaying card VMs in Adapter");
-            swipeRefreshLayout.setRefreshing(false);
             // refresh the list adapter
             flickrListAdapter.refreshDataSet(flickrCardVMs);
         }
@@ -128,6 +128,14 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
             flickrListAdapter.clear();
             ObservableSingletonManager.INSTANCE.removeObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
             Toast.makeText(getActivity(), throwable.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    };
+
+    private final Action0 flickrRecenPhotosOnComplete = new Action0() {
+        @Override
+        public void call() {
+            Log.d(CLASSNAME, "flickrRecenPhotosOnComplete.call() - Data completed. Loading done.");
+            swipeRefreshLayout.setRefreshing(false);
         }
     };
 

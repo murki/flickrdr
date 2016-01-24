@@ -13,6 +13,7 @@ import java.util.List;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 public class FlickrDomainService {
 
@@ -26,14 +27,7 @@ public class FlickrDomainService {
 
     @RxLogObservable
     public Observable<List<FlickrCardVM>> getRecentPhotos() {
-        return Observable.merge(
-                flickrDiskRepository.getRecentPhotos(),
-                flickrApiRepository.getRecentPhotos().doOnNext(new Action1<RecentPhotosResponse>() {
-                    @Override
-                    public void call(RecentPhotosResponse recentPhotosResponse) {
-                        flickrDiskRepository.savePhotosNonRx(recentPhotosResponse); // TODO: Make it work with chained Observables
-                    }
-                }))
+        return getMergedPhotos()
                 .filter(new Func1<RecentPhotosResponse, Boolean>() {
                     @Override
                     public Boolean call(RecentPhotosResponse recentPhotosResponse) {
@@ -45,5 +39,17 @@ public class FlickrDomainService {
                     }
                 })
                 .map(FlickrApiToVmMapping.instance());
+    }
+
+    @RxLogObservable
+    private Observable<RecentPhotosResponse> getMergedPhotos() {
+        return Observable.merge(
+                flickrDiskRepository.getRecentPhotos(),
+                flickrApiRepository.getRecentPhotos().doOnNext(new Action1<RecentPhotosResponse>() {
+                    @Override
+                    public void call(RecentPhotosResponse recentPhotosResponse) {
+                        flickrDiskRepository.savePhotosNonRx(recentPhotosResponse); // TODO: Make it work with chained Observables
+                    }
+                }));
     }
 }
