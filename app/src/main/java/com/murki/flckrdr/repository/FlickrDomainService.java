@@ -44,12 +44,13 @@ public class FlickrDomainService {
     @RxLogObservable
     private Observable<RecentPhotosResponse> getMergedPhotos() {
         return Observable.merge(
-                flickrDiskRepository.getRecentPhotos(),
+                flickrDiskRepository.getRecentPhotos().subscribeOn(Schedulers.io()),
                 flickrApiRepository.getRecentPhotos().doOnNext(new Action1<RecentPhotosResponse>() {
                     @Override
                     public void call(RecentPhotosResponse recentPhotosResponse) {
                         flickrDiskRepository.savePhotosNonRx(recentPhotosResponse); // TODO: Make it work with chained Observables
                     }
-                }));
+                }).subscribeOn(Schedulers.io())
+        );
     }
 }

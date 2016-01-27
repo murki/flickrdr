@@ -103,7 +103,7 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
             recentPhotosObservable = flickrDomainService
                     .getRecentPhotos()
                     .cache()
-                    .subscribeOn(Schedulers.io())
+//                    .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread());
 
             ObservableSingletonManager.INSTANCE.putObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS, recentPhotosObservable);
@@ -125,9 +125,8 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
         public void call(Throwable throwable) {
             Log.e(CLASSNAME, "flickrRecentPhotosOnError.call() - ERROR", throwable);
             swipeRefreshLayout.setRefreshing(false);
-            flickrListAdapter.clear();
             ObservableSingletonManager.INSTANCE.removeObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
-            Toast.makeText(getActivity(), throwable.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), "OnError=" + throwable.getMessage(), Toast.LENGTH_LONG).show();
         }
     };
 
