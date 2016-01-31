@@ -12,14 +12,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.murki.flckrdr.model.RecentPhotosResponse;
-import com.murki.flckrdr.repository.FlickrApiRepository;
-import com.murki.flckrdr.repository.FlickrDiskRepository;
 import com.murki.flckrdr.repository.FlickrDomainService;
-import com.murki.flckrdr.viewmodel.FlickrApiToVmMapping;
 import com.murki.flckrdr.viewmodel.FlickrCardVM;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import rx.Observable;
@@ -27,8 +23,7 @@ import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
 import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
+import rx.schedulers.Timestamped;
 
 public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -91,19 +86,18 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
         // use a linear layout manager
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
         // specify an adapter
-        recyclerView.setAdapter(flickrListAdapter = new FlickrListAdapter(new ArrayList<FlickrCardVM>()));
+        recyclerView.setAdapter(flickrListAdapter = new FlickrListAdapter(new Timestamped<>(0, Collections.<FlickrCardVM>emptyList())));
     }
 
     private void fetchFlickrItems() {
         swipeRefreshLayout.setRefreshing(true);
         unsubscribe();
         FlickrDomainService flickrDomainService = new FlickrDomainService(getContext());
-        Observable<List<FlickrCardVM>> recentPhotosObservable = ObservableSingletonManager.INSTANCE.getObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
+        Observable<Timestamped<List<FlickrCardVM>>> recentPhotosObservable = ObservableSingletonManager.INSTANCE.getObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
         if (recentPhotosObservable == null) {
             recentPhotosObservable = flickrDomainService
-                    .getRecentPhotos()
+                    .getRecentPhotos(flickrListAdapter.getTimestampMillis())
                     .cache()
-//                    .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread());
 
             ObservableSingletonManager.INSTANCE.putObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS, recentPhotosObservable);
@@ -111,12 +105,12 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
         flickrListSubscription = recentPhotosObservable.subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosOnError, flickrRecenPhotosOnComplete);
     }
 
-    private final Action1<List<FlickrCardVM>> flickrRecentPhotosOnNext = new Action1<List<FlickrCardVM>>() {
+    private final Action1<Timestamped<List<FlickrCardVM>>> flickrRecentPhotosOnNext = new Action1<Timestamped<List<FlickrCardVM>>>() {
         @Override
-        public void call(List<FlickrCardVM> flickrCardVMs) {
+        public void call(Timestamped<List<FlickrCardVM>> flickrCardVMs) {
             Log.d(CLASSNAME, "flickrRecentPhotosOnNext.call() - Displaying card VMs in Adapter");
             // refresh the list adapter
-            flickrListAdapter.refreshDataSet(flickrCardVMs);
+            recyclerView.swapAdapter(flickrListAdapter = new FlickrListAdapter(flickrCardVMs), false);
         }
     };
 

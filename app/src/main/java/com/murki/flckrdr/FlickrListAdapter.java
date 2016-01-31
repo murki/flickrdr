@@ -2,6 +2,7 @@ package com.murki.flckrdr;
 
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,13 +15,15 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
+import rx.schedulers.Timestamped;
+
 public class FlickrListAdapter extends RecyclerView.Adapter<FlickrListAdapter.BindingHolder> {
 
     private static final String CLASSNAME = FlickrListAdapter.class.getCanonicalName();
 
-    private ArrayList<FlickrCardVM> dataSet;
+    private Timestamped<List<FlickrCardVM>> dataSet;
 
-    public FlickrListAdapter(ArrayList<FlickrCardVM> dataSet) {
+    public FlickrListAdapter(Timestamped<List<FlickrCardVM>> dataSet) {
         this.dataSet = dataSet;
     }
 
@@ -35,7 +38,7 @@ public class FlickrListAdapter extends RecyclerView.Adapter<FlickrListAdapter.Bi
 
     @Override
     public void onBindViewHolder(BindingHolder bindingHolder, int i) {
-        final FlickrCardVM itemVM = dataSet.get(i);
+        final FlickrCardVM itemVM = dataSet.getValue().get(i);
         bindingHolder.getBinding().setVariable(com.murki.flckrdr.BR.viewModel, itemVM);
         bindingHolder.getBinding().executePendingBindings();
     }
@@ -45,27 +48,12 @@ public class FlickrListAdapter extends RecyclerView.Adapter<FlickrListAdapter.Bi
         if (dataSet == null) {
             return 0;
         } else {
-            return dataSet.size();
+            return dataSet.getValue().size();
         }
     }
 
-    public void clear() {
-        int dataSetSize = dataSet.size();
-        if (dataSetSize > 0) {
-            dataSet.clear();
-            notifyItemRangeRemoved(0, dataSetSize);
-            Log.d(CLASSNAME, "notifyItemRangeRemoved() - dataSetSize=" + dataSetSize);
-        }
-    }
-
-    public void refreshDataSet(List<FlickrCardVM> dataSet) {
-        clear();
-        int dataSetSize = dataSet.size();
-        if (dataSetSize > 0) {
-            this.dataSet.addAll(dataSet);
-            notifyItemRangeInserted(0, dataSetSize);
-            Log.d(CLASSNAME, "notifyItemRangeInserted() - dataSetSize=" + dataSetSize);
-        }
+    public long getTimestampMillis() {
+        return dataSet.getTimestampMillis();
     }
 
     // Provide a reference to the views for each data item

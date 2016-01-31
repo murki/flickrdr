@@ -14,8 +14,11 @@ import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
+import rx.schedulers.Timestamped;
 
 public class FlickrDomainService {
+
+    private static final String CLASSNAME = FlickrDomainService.class.getCanonicalName();
 
     private final FlickrApiRepository flickrApiRepository;
     private final FlickrDiskRepository flickrDiskRepository;
@@ -26,31 +29,47 @@ public class FlickrDomainService {
     }
 
     @RxLogObservable
-    public Observable<List<FlickrCardVM>> getRecentPhotos() {
+    public Observable<Timestamped<List<FlickrCardVM>>> getRecentPhotos(long timestampMillis) {
         return getMergedPhotos()
-                .filter(new Func1<RecentPhotosResponse, Boolean>() {
-                    @Override
-                    public Boolean call(RecentPhotosResponse recentPhotosResponse) {
-                        Log.d(FlickrDomainService.class.getCanonicalName(), "Frodo (fake) => Call finished! Filtering results. recentPhotosResponse=" + recentPhotosResponse);
-                        // TODO: implemente right filter:
-                        // filter it, if timestamp of new arrived (emission) data is less than timestamp of already displayed data — ignore it.
-                        // filter(data -> data.timeStamp >= displayedData.timeStamp)
-                        return recentPhotosResponse != null && recentPhotosResponse.isUpToDate();
-                    }
-                })
+                .filter(getRecentPhotosFilter(timestampMillis))
                 .map(FlickrApiToVmMapping.instance());
     }
 
     @RxLogObservable
-    private Observable<RecentPhotosResponse> getMergedPhotos() {
+    private Observable<Timestamped<RecentPhotosResponse>> getMergedPhotos() {
         return Observable.merge(
                 flickrDiskRepository.getRecentPhotos().subscribeOn(Schedulers.io()),
-                flickrApiRepository.getRecentPhotos().doOnNext(new Action1<RecentPhotosResponse>() {
+                flickrApiRepository.getRecentPhotos().timestamp().doOnNext(new Action1<Timestamped<RecentPhotosResponse>>() {
                     @Override
-                    public void call(RecentPhotosResponse recentPhotosResponse) {
-                        flickrDiskRepository.savePhotosNonRx(recentPhotosResponse); // TODO: Make it work with chained Observables
+                    public void call(Timestamped<RecentPhotosResponse> recentPhotosResponse) {
+                        Log.d(CLASSNAME, "Frodo (!) => flickrApiRepository.getRecentPhotos().doOnNext() - Saving photos to disk - thread=" + Thread.currentThread().getName());
+                        flickrDiskRepository.savePhotos(recentPhotosResponse); // TODO: Make it work with chained Rx Observables
                     }
                 }).subscribeOn(Schedulers.io())
         );
+    }
+
+    private Func1<Timestamped<RecentPhotosResponse>, Boolean> getRecentPhotosFilter(final long timestampMillis) {
+        return new Func1<Timestamped<RecentPhotosResponse>, Boolean>() {
+            @Override
+            public Boolean call(Timestamped<RecentPhotosResponse> recentPhotosResponseTimestamped) {
+
+                StringBuilder logMessage = new StringBuilder("Frodo (!) => getMergedPhotos() - Filtering results");
+                if (recentPhotosResponseTimestamped == null) {
+                    logMessage.append(", recentPhotosResponseTimestamped is null");
+                } else {
+                    logMessage.append(", timestamps=").append(recentPhotosResponseTimestamped.getTimestampMillis()).append(">").append(timestampMillis).append("?");
+                }
+                logMessage.append(", thread=").append(Thread.currentThread().getName());
+                Log.d(CLASSNAME, logMessage.toString());
+
+                // filter it
+                // if result is null - ignore it
+                // if timestamp of new arrived (emission) data is less than timestamp of already displayed data — ignore it.
+                return recentPhotosResponseTimestamped != null
+                        && recentPhotosResponseTimestamped.getValue() != null
+                        && recentPhotosResponseTimestamped.getTimestampMillis() > timestampMillis;
+            }
+        };
     }
 }
