@@ -90,7 +90,7 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
     }
 
     private void fetchFlickrItems() {
-        swipeRefreshLayout.setRefreshing(true);
+        isRefreshing(true);
         unsubscribe();
         FlickrDomainService flickrDomainService = new FlickrDomainService(getContext());
         Observable<Timestamped<List<FlickrCardVM>>> recentPhotosObservable = ObservableSingletonManager.INSTANCE.getObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
@@ -103,6 +103,15 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
             ObservableSingletonManager.INSTANCE.putObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS, recentPhotosObservable);
         }
         flickrListSubscription = recentPhotosObservable.subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosOnError, flickrRecenPhotosOnComplete);
+    }
+
+    private void isRefreshing(final boolean isRefreshing) {
+        swipeRefreshLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                swipeRefreshLayout.setRefreshing(isRefreshing);
+            }
+        });
     }
 
     private final Action1<Timestamped<List<FlickrCardVM>>> flickrRecentPhotosOnNext = new Action1<Timestamped<List<FlickrCardVM>>>() {
@@ -118,7 +127,7 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
         @Override
         public void call(Throwable throwable) {
             Log.e(CLASSNAME, "flickrRecentPhotosOnError.call() - ERROR", throwable);
-            swipeRefreshLayout.setRefreshing(false);
+            isRefreshing(false);
             ObservableSingletonManager.INSTANCE.removeObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
             Toast.makeText(getActivity(), "OnError=" + throwable.getMessage(), Toast.LENGTH_LONG).show();
         }
@@ -128,7 +137,7 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
         @Override
         public void call() {
             Log.d(CLASSNAME, "flickrRecenPhotosOnComplete.call() - Data completed. Loading done.");
-            swipeRefreshLayout.setRefreshing(false);
+            isRefreshing(false);
         }
     };
 
