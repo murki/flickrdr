@@ -32,7 +32,7 @@ public class FlickrDiskRepository {
 
     public void savePhotos(Timestamped<RecentPhotosResponse> photos) {
         String serializedPhotoList = flickrPhotosJsonAdapter.toJson(photos);
-        sharedPreferences.edit().putString(RECENT_PHOTOS_RESPONSE_KEY, serializedPhotoList).commit();
+        sharedPreferences.edit().putString(RECENT_PHOTOS_RESPONSE_KEY, serializedPhotoList).apply();
     }
 
     @RxLogObservable
