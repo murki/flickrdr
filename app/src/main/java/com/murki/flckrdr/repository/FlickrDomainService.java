@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.fernandocejas.frodo.annotation.RxLogObservable;
+import com.murki.flckrdr.ITimestampedView;
 import com.murki.flckrdr.model.RecentPhotosResponse;
 import com.murki.flckrdr.viewmodel.FlickrApiToVmMapping;
 import com.murki.flckrdr.viewmodel.FlickrCardVM;
@@ -29,9 +30,9 @@ public class FlickrDomainService {
     }
 
     @RxLogObservable
-    public Observable<Timestamped<List<FlickrCardVM>>> getRecentPhotos(long timestampMillis) {
+    public Observable<Timestamped<List<FlickrCardVM>>> getRecentPhotos(ITimestampedView timestampedView) {
         return getMergedPhotos()
-                .filter(getRecentPhotosFilter(timestampMillis))
+                .filter(getRecentPhotosFilter(timestampedView))
                 .map(FlickrApiToVmMapping.instance());
     }
 
@@ -49,7 +50,7 @@ public class FlickrDomainService {
         );
     }
 
-    private Func1<Timestamped<RecentPhotosResponse>, Boolean> getRecentPhotosFilter(final long timestampMillis) {
+    private Func1<Timestamped<RecentPhotosResponse>, Boolean> getRecentPhotosFilter(final ITimestampedView timestampedView) {
         return new Func1<Timestamped<RecentPhotosResponse>, Boolean>() {
             @Override
             public Boolean call(Timestamped<RecentPhotosResponse> recentPhotosResponseTimestamped) {
@@ -58,7 +59,7 @@ public class FlickrDomainService {
                 if (recentPhotosResponseTimestamped == null) {
                     logMessage.append(", recentPhotosResponseTimestamped is null");
                 } else {
-                    logMessage.append(", timestamps=").append(recentPhotosResponseTimestamped.getTimestampMillis()).append(">").append(timestampMillis).append("?");
+                    logMessage.append(", timestamps=").append(recentPhotosResponseTimestamped.getTimestampMillis()).append(">").append(timestampedView.getViewDataTimestampMillis()).append("?");
                 }
                 logMessage.append(", thread=").append(Thread.currentThread().getName());
                 Log.d(CLASSNAME, logMessage.toString());
@@ -68,7 +69,7 @@ public class FlickrDomainService {
                 // if timestamp of new arrived (emission) data is less than timestamp of already displayed data — ignore it.
                 return recentPhotosResponseTimestamped != null
                         && recentPhotosResponseTimestamped.getValue() != null
-                        && recentPhotosResponseTimestamped.getTimestampMillis() > timestampMillis;
+                        && recentPhotosResponseTimestamped.getTimestampMillis() > timestampedView.getViewDataTimestampMillis();
             }
         };
     }
