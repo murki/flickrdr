@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.murki.flckrdr.repository.FlickrDomainService;
 import com.murki.flckrdr.viewmodel.FlickrCardVM;
 
@@ -92,9 +93,15 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
     private void fetchFlickrItems() {
         isRefreshing(true);
         unsubscribe();
-        FlickrDomainService flickrDomainService = new FlickrDomainService(getContext());
+        Observable<Timestamped<List<FlickrCardVM>>> recentPhotosObservable = obtainUsableObservable();
+        flickrListSubscription = recentPhotosObservable.subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosOnError, flickrRecenPhotosOnComplete);
+    }
+
+    @RxLogObservable
+    private Observable<Timestamped<List<FlickrCardVM>>> obtainUsableObservable() {
         Observable<Timestamped<List<FlickrCardVM>>> recentPhotosObservable = ObservableSingletonManager.INSTANCE.getObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS);
         if (recentPhotosObservable == null) {
+            FlickrDomainService flickrDomainService = new FlickrDomainService(getContext());
             recentPhotosObservable = flickrDomainService
                     .getRecentPhotos(flickrListAdapter.getTimestampMillis())
                     .cache()
@@ -102,7 +109,7 @@ public class FlickrListFragment extends Fragment implements SwipeRefreshLayout.O
 
             ObservableSingletonManager.INSTANCE.putObservable(ObservableSingletonManager.FLICKR_GET_RECENT_PHOTOS, recentPhotosObservable);
         }
-        flickrListSubscription = recentPhotosObservable.subscribe(flickrRecentPhotosOnNext, flickrRecentPhotosOnError, flickrRecenPhotosOnComplete);
+        return recentPhotosObservable;
     }
 
     private void isRefreshing(final boolean isRefreshing) {
